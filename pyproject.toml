@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "git-credential-manager"
+dynamic = ["version"]
+description = "Git Credential Manager repackaged as Python wheels"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+
+[project.urls]
+Homepage = "https://github.com/git-ecosystem/git-credential-manager"
+Repository = "https://github.com/cataggar/pypi-git-credential-manager"
+
+[project.scripts]
+git-credential-manager = "git_credential_manager:main"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/git_credential_manager"]
