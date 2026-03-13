@@ -1,6 +1,6 @@
 # git-credential-manager
 
-[Git Credential Manager](https://github.com/git-ecosystem/git-credential-manager) repackaged as Python wheels for easy installation via `pip` or `uv`.
+[Git Credential Manager](https://github.com/git-ecosystem/git-credential-manager) repackaged as Python wheels for easy installation via tools like `uv`.
 
 ## Install
 
@@ -41,9 +41,11 @@ and repackages each `.tar.gz` / `.zip` as a platform-specific Python wheel.
 A thin Python entry point (`console_scripts`) delegates to the native binary,
 so `git-credential-manager` is available on `PATH` after install.
 
-##
+## Development
 
-``` Example dev setup on Linux
+python, uv, & just are needed. Here is a quick setup example on Linux:
+
+```bash
 tdnf install -y python3 python3-pip
 python3 -m pip install uv
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc

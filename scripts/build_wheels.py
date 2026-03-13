@@ -8,7 +8,6 @@
 
 import hashlib
 import io
-import os
 import stat
 import sys
 import tarfile
@@ -17,9 +16,10 @@ import zipfile
 from base64 import urlsafe_b64encode
 from pathlib import Path
 
-import requests
+import requests  # type: ignore[import-untyped]
 
-PACKAGE_NAME = "git_credential_manager"
+IMPORT_NAME = "git_credential_manager"
+DIST_NAME = "git_credential_manager"
 GCM_REPO = "git-ecosystem/git-credential-manager"
 
 PLATFORMS = {
@@ -109,7 +109,7 @@ _EXEC_ATTR = (
 _FILE_ATTR = (stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH) << 16
 
 
-def build_wheel(version: str, platform_key: str, info: dict, dist_dir: Path) -> Path:
+def build_wheel(version: str, platform_key: str, info: dict[str, str], dist_dir: Path) -> Path:
     """Build a single platform wheel."""
     ext = info["ext"]
     platform_tag = info["tag"]
@@ -127,9 +127,9 @@ def build_wheel(version: str, platform_key: str, info: dict, dist_dir: Path) -> 
         entries: list[tuple[str, bytes, bool]] = []
 
         # Add __init__.py
-        init_py = Path(__file__).resolve().parent.parent / "python" / PACKAGE_NAME / "__init__.py"
+        init_py = Path(__file__).resolve().parent.parent / "python" / IMPORT_NAME / "__init__.py"
         entries.append(
-            (f"{PACKAGE_NAME}/__init__.py", init_py.read_bytes(), False)
+            (f"{IMPORT_NAME}/__init__.py", init_py.read_bytes(), False)
         )
 
         # Add all files from the extracted archive
@@ -137,12 +137,15 @@ def build_wheel(version: str, platform_key: str, info: dict, dist_dir: Path) -> 
             if not fpath.is_file():
                 continue
             rel = fpath.relative_to(source_dir).as_posix()
-            arcname = f"{PACKAGE_NAME}/{rel}"
+            arcname = f"{IMPORT_NAME}/{rel}"
             executable = _is_executable(fpath, binary_name)
             entries.append((arcname, fpath.read_bytes(), executable))
 
         # dist-info directory
-        dist_info_dir = f"{PACKAGE_NAME}-{version}.dist-info"
+        dist_info_dir = f"{DIST_NAME}-{version}.dist-info"
+
+        readme_path = Path(__file__).resolve().parent.parent / "README.md"
+        readme_text = readme_path.read_text(encoding="utf-8")
 
         metadata = (
             f"Metadata-Version: 2.4\n"
@@ -152,6 +155,9 @@ def build_wheel(version: str, platform_key: str, info: dict, dist_dir: Path) -> 
             f"Home-page: https://github.com/git-ecosystem/git-credential-manager\n"
             f"License: MIT\n"
             f"Requires-Python: >=3.9\n"
+            f"Description-Content-Type: text/markdown\n"
+            f"\n"
+            f"{readme_text}"
         )
         entries.append((f"{dist_info_dir}/METADATA", metadata.encode(), False))
 
@@ -163,13 +169,13 @@ def build_wheel(version: str, platform_key: str, info: dict, dist_dir: Path) -> 
         )
         entries.append((f"{dist_info_dir}/WHEEL", wheel_meta.encode(), False))
 
-        entry_points = "[console_scripts]\ngit-credential-manager = git_credential_manager:main\n"
+        entry_points = f"[console_scripts]\ngit-credential-manager = {IMPORT_NAME}:main\n"
         entries.append(
             (f"{dist_info_dir}/entry_points.txt", entry_points.encode(), False)
         )
 
         # Build RECORD
-        records = []
+        records: list[str] = []
         for arcname, file_data, _ in entries:
             digest = sha256_digest(file_data)
             records.append(f"{arcname},sha256={digest},{len(file_data)}")
@@ -178,7 +184,7 @@ def build_wheel(version: str, platform_key: str, info: dict, dist_dir: Path) -> 
         entries.append((f"{dist_info_dir}/RECORD", record_data, False))
 
         # Write wheel zip
-        wheel_name = f"{PACKAGE_NAME}-{version}-py3-none-{platform_tag}.whl"
+        wheel_name = f"{DIST_NAME}-{version}-py3-none-{platform_tag}.whl"
         wheel_path = dist_dir / wheel_name
         with zipfile.ZipFile(wheel_path, "w", zipfile.ZIP_DEFLATED) as whl:
             for arcname, file_data, executable in entries:
@@ -203,7 +209,7 @@ def main() -> None:
 
     print(f"Building wheels for GCM v{version}\n")
 
-    wheels = []
+    wheels: list[Path] = []
     for platform_key, info in PLATFORMS.items():
         print(f"[{platform_key}]")
         wheel = build_wheel(version, platform_key, info, dist_dir)
