@@ -1,5 +1,3 @@
-set windows-shell := ["cmd.exe", "/c"]
-
 # Show the current version
 version:
     uvx --with hatch-vcs hatchling version

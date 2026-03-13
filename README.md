@@ -5,13 +5,7 @@
 ## Install
 
 ```sh
-pip install git-credential-manager
-```
-
-or
-
-```sh
-uv pip install git-credential-manager
+uv tool install git-credential-manager
 ```
 
 ## Configure Git
@@ -47,13 +41,13 @@ and repackages each `.tar.gz` / `.zip` as a platform-specific Python wheel.
 A thin Python entry point (`console_scripts`) delegates to the native binary,
 so `git-credential-manager` is available on `PATH` after install.
 
-## Releasing
+##
 
-Push a version tag to trigger the GitHub Actions workflow:
-
-```sh
-git tag v2.7.3
-git push origin v2.7.3
+``` Example dev setup on Linux
+tdnf install -y python3 python3-pip
+python3 -m pip install uv
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+uv tool install rust-just
 ```
 
 ## License
