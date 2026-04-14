@@ -14,9 +14,6 @@ requires-python = ">=3.9"
 Homepage = "https://github.com/git-ecosystem/git-credential-manager"
 Repository = "https://github.com/cataggar/pypi-git-credential-manager"
 
-[project.scripts]
-git-credential-manager = "git_credential_manager:main"
-
 [tool.hatch.version]
 source = "vcs"
 
