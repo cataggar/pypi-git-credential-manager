@@ -66,19 +66,13 @@ def sha256_digest(data: bytes) -> str:
     return urlsafe_b64encode(hashlib.sha256(data).digest()).rstrip(b"=").decode()
 
 
-_FALLBACK_UPSTREAM_VERSION: str | None = None
-
-
-def _get_latest_upstream_version() -> str:
-    global _FALLBACK_UPSTREAM_VERSION
-    if _FALLBACK_UPSTREAM_VERSION is None:
-        resp = requests.get(
-            f"https://api.github.com/repos/{GCM_REPO}/releases/latest",
-            timeout=30,
-        )
-        resp.raise_for_status()
-        _FALLBACK_UPSTREAM_VERSION = resp.json()["tag_name"].lstrip("v")
-    return _FALLBACK_UPSTREAM_VERSION
+def _previous_patch_version(version: str) -> str:
+    base = version.split(".post")[0]
+    parts = base.split(".")
+    if len(parts) >= 3 and parts[-1].isdigit() and int(parts[-1]) > 0:
+        parts[-1] = str(int(parts[-1]) - 1)
+        return ".".join(parts)
+    return base
 
 
 def download_asset(version: str, platform_key: str, ext: str) -> bytes:
@@ -89,7 +83,7 @@ def download_asset(version: str, platform_key: str, ext: str) -> bytes:
     print(f"  Downloading {asset_name} ...")
     resp = requests.get(url, allow_redirects=True, timeout=300)
     if resp.status_code == 404:
-        upstream_version = _get_latest_upstream_version()
+        upstream_version = _previous_patch_version(version)
         asset_name = f"{platform_key}-{upstream_version}{ext}"
         url = f"https://github.com/{GCM_REPO}/releases/download/v{upstream_version}/{asset_name}"
         print(f"  v{version} not found upstream; falling back to {asset_name} ...")
